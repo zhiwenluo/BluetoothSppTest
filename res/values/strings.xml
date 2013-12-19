@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">BluetoothTest</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <!--bluetooth devices actitivty -->
+    	<string name="device_type_bredr">BR/EDR Bluetooth</string>
+	<string name="device_type_ble">Low Energy Bluetooth</string>
+	<string name="device_type_dumo">Duplex mode luetooth</string>
+	<string name="menu_close">关闭</string>
+    <string name="actDiscovery_name">搜索设备</string>
+	<string name="actDiscovery_msg_select_device">选择一个设备配对</string>
+	<string name="actDiscovery_msg_not_find_device">未发现设备</string>
+	<string name="actDiscovery_msg_scaning_device">正在扫描..&#8230;</string>
+	<string name="actDiscovery_msg_starting_device">正在打开蓝牙..&#8230;</string>
+	<string name="actDiscovery_msg_start_bluetooth_fail">打开蓝牙失败..</string>
+	<string name="actDiscovery_msg_bluetooth_not_start">蓝牙不可用..</string>
+	<string name="actDiscovery_menu_scan">扫描</string>
+	<string name="actDiscovery_bond_bonded">已配对</string>
+	<string name="actDiscovery_bond_nothing">Nothing</string>
+	<string name="other_devices" >其他可配对设备</string>
+	<string name="paired_devices">配对过的设备</string>
+	<string name="scan_bt">搜索设备</string>
+	<string name="none_paired">没有配对过设备</string>
+	<string name="scanning">正在搜索</string>
+	<string name="select_devices">选择一个设备配对</string>
+    <string name="none_found">未发现设备</string>
+    <string name="not_connected">未连接设备..</string>
+    <string name="bt_not_enabled">蓝牙不可用..</string>
+</resources>
