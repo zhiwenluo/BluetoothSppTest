@@ -7,6 +7,7 @@ import android.R.string;
 import bluetooth.CHexConver;
 
 public class BuildFrameUtil {
+    static int DATA_MAX_LEN = 128;
 
     static char auchCRCHi[] = { 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
 	    0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80,
@@ -123,9 +124,9 @@ public class BuildFrameUtil {
      * @return	返回建立好的帧Frame, byte数组形式 
      */
     public static byte[] buildMyFrame(byte[] message , byte[] crcbytes) {
-	byte[] myFrame = new byte[128];
+	byte[] myFrame = new byte[DATA_MAX_LEN];
 	int index = 3;
-	if (message.length > 128) {
+	if (message.length > DATA_MAX_LEN) {
 	    System.out.println("message.length > 128");
 	    return null;
 	}
@@ -174,7 +175,7 @@ public class BuildFrameUtil {
 	if((receivedFrame[0] != (byte)0xAA) && (receivedFrame[1] != (byte)0xAA))
 	    return null;
 	//长度合法性检查
-	if( (length > 128 ) || (length > frameLength)) 
+	if( (length > DATA_MAX_LEN ) || (length > frameLength)) 
 	    return null;
 	//CRC与长度分析
 	if (receivedFrame[frameLength - 2] == (byte) 0xAA) {
@@ -210,4 +211,74 @@ public class BuildFrameUtil {
 	return message;
     }
     
+    /**根据由帧解析出来的Message进一步解析出里面的数据部分
+     * @param message	解析出来的message
+     * @return	SppMessage类型，由解析Message得来
+     */
+    public SppMessage MessageAnalyse(byte[] message) {
+	SppMessage sppMessage = new SppMessage();
+	int sDataLen = message.length;
+	//FLSD
+	if((message[0]=='F') && (message[1] == 'L') && (message[2] == 'S') && (message[3] == 'D')) {
+	    sppMessage.type = StringConstant.TYPE_FLSD;
+	    sppMessage.lowFrame = 0;
+	    sppMessage.highFrame = 0;
+	    if(sDataLen - 4 < 0 || sDataLen > DATA_MAX_LEN) 
+		return null;
+	    sppMessage.dataLen = sDataLen - 4 ;
+	    sppMessage.data = new byte[sppMessage.dataLen];
+	    System.arraycopy(message, 4, sppMessage.data, 0, sppMessage.dataLen);
+	}
+	//FD
+	else if ((message[0] == 'F') && (message[1] == 'D')) {
+	    sppMessage.type = StringConstant.TYPE_FD;
+	    sppMessage.lowFrame = message[2];
+	    sppMessage.highFrame = message[3];
+	    if(sDataLen - 4 < 0 || sDataLen-4 > DATA_MAX_LEN-2) 
+		return null;
+	    
+	    sppMessage.dataLen = sDataLen - 4;
+	    sppMessage.data = new byte[sppMessage.dataLen];
+	    System.arraycopy(message, 4, sppMessage.data, 0, sppMessage.dataLen);
+	}
+	//FLSE
+	else if ((message[0]=='F') && (message[1] == 'L') && (message[2] == 'S') && (message[3] == 'E')) {
+	    sppMessage.type = StringConstant.TYPE_FLSE;
+	    sppMessage.lowFrame = 0 ;
+	    sppMessage.highFrame = 0;
+	    sppMessage.dataLen = 0;
+	    sppMessage.data = new byte[sppMessage.dataLen];
+	}
+	//YFLRDOK
+	else if ((message[0]=='Y') &&(message[0]=='F') && (message[1] == 'L') && (message[2] == 'R') && (message[3] == 'D')
+		&& (message[3] == 'O')&& (message[3] == 'K')) 
+	{
+	    sppMessage.type = StringConstant.TYPE_GetFl_YFLRDOK;
+	    sppMessage.lowFrame = 0;
+	    sppMessage.highFrame = 0;
+	    sppMessage.dataLen  = 0;
+	    sppMessage.data = new byte[sppMessage.dataLen];
+	}
+	//YERROR
+	else if ((message[0]=='Y') &&(message[0]=='E') && (message[1] == 'R') && (message[2] == 'R') && (message[3] == 'O')
+		&& (message[3] == 'R')) 
+	{
+	    sppMessage.type = StringConstant.TYPE_GetFl_YERROR;
+	    sppMessage.lowFrame = 0;
+	    sppMessage.highFrame = 0;
+	    sppMessage.dataLen = 0;
+	    sppMessage.data = new byte[sppMessage.dataLen];
+	}
+	else
+	    return null;
+	return sppMessage;
+    }
+    
+    /**	格式化解析后的message数据
+     * @return	需要的数据,已PecData类型保存
+     */
+    public PecData FormatPecData() {
+	PecData pecData = new PecData();
+	return pecData;
+    }
 }
