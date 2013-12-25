@@ -479,11 +479,12 @@ public class BluetoothChatService {
             while (true) {
                 try {
                     // Read from the InputStream
-                    if(mmInStream.available() > 0){
+                    if( mmInStream.available() > 0){
                     bytes = mmInStream.read(buffer , 0 ,128);
-                    System.out.println("read---------->");
                     // Send the obtained bytes to the UI Activity
-                    mHandler.obtainMessage(StringConstant.MESSAGE_READ, bytes, -1, buffer)
+                    byte[] bytess = new byte[bytes];
+                    System.arraycopy(buffer, 0, bytess, 0, bytes);
+                    mHandler.obtainMessage(StringConstant.MESSAGE_READ, bytes, -1, bytess)
                             .sendToTarget();
                     }
                 } catch (IOException e) {
@@ -500,7 +501,7 @@ public class BluetoothChatService {
          */
         public void write(byte[] buffer) {
             try {
-        	CHexConver.printHexString("buffer------->", buffer);
+        	CHexConver.printHexString("write------->", buffer);
         	for (byte b : buffer) {
         	    mmOutStream.write(b);
         	     try {

@@ -21,8 +21,34 @@
         android:layout_height="wrap_content"
         android:text="BlueTooth"
         />
-    <ListView 
+    <LinearLayout 
+        android:id="@+id/linear"
         android:layout_below="@id/button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+                <Button 
+            android:id="@+id/replayFLSD"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="应答读"
+            />
+        <Button 
+            android:id="@+id/replayFD"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="应答帧"
+            />
+         <Button 
+            android:id="@+id/replayFLRE"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="应答结束"
+            />
+    </LinearLayout>
+    <ListView 
+        android:layout_below="@id/linear"
         android:id="@+id/listview"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

@@ -35,6 +35,7 @@ import bluetooth.DiscoveryDevicesActivity;
 public class MainActivity extends Activity {
 
     private boolean D = true;
+    int lowFrame = 0x00 ;
     private String TAG = "this";
     private ListView listView;
     private BluetoothAdapter mBluetoothAdapter;
@@ -51,9 +52,35 @@ public class MainActivity extends Activity {
 //	byte[] bytess = BuildFrameUtil.calculateCRC(bytes);
 //	byte[] bytesss = BuildFrameUtil.buildMyFrame(bytes, bytess);
 //	byte[] bytessss = BuildFrameUtil.FrameAnalyse(bytesss);
-//	CHexConver.printHexString("CRC---->", bytessss);
-	
+//	CHexConver.printHexString("analyseMessage---->", bytessss);
 	Button button = (Button) findViewById(R.id.button);
+	Button replyFDButton = (Button) findViewById(R.id.replayFD);
+	Button replyFLSDButton = (Button) findViewById(R.id.replayFLSD);
+	Button replyFLREButton = (Button) findViewById(R.id.replayFLRE);
+	replyFLSDButton.setOnClickListener(new OnClickListener() {
+	    @Override
+	    public void onClick(View arg0) {
+		byte[] writeBytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_SndFlNm_YFLSDOK, "", -1, -1);
+		sendMyMessage(writeBytes);
+	    }
+	});
+	replyFDButton.setOnClickListener(new OnClickListener() {
+	    @Override
+	    public void onClick(View arg0) {
+		if (lowFrame <= 0x11) {
+		    byte[] writeBytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_SndData_YFD, "", lowFrame,0x00);
+		    sendMyMessage(writeBytes);
+		    lowFrame++;
+		}
+	    }
+	});
+	replyFLREButton.setOnClickListener(new OnClickListener() {
+	    @Override
+	    public void onClick(View arg0) {
+                byte[] writeBytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_SndFlEnd_FLRE, "", -1, -1);
+                sendMyMessage(writeBytes);
+	    }
+	});
 	listView = (ListView) findViewById(R.id.listview);
 	button.setOnClickListener(new OnClickListener() {
 	    @Override
@@ -108,36 +135,8 @@ public class MainActivity extends Activity {
 //                    mTitle.append(mConnectedDeviceName);
                     System.out.println("hanlder---------->STATE_CONNECTED");
                     mConversationArrayAdapter.clear();
-                    byte[] bytes = new byte[] {(byte) 0xaa,
-                	    					(byte) 0xaa,
-                	    					(byte) 0x14,
-                	    					(byte) 0x46,
-                	    					(byte) 0x4c,
-                	    					(byte) 0x52,
-                	    					(byte) 0x44,
-                	    					(byte) 0x65,
-                	    					(byte) 0x3a,
-                	    					(byte) 0x5c,
-                	    					(byte) 0x70,
-                	    					(byte) 0x65,
-                	    					(byte) 0x63,
-                	    					(byte) 0x66,
-                	    					(byte) 0x69,
-                	    					(byte) 0x6c,
-                	    					(byte) 0x65,
-                	    					(byte) 0x2e,
-                	    					(byte) 0x64,
-                	    					(byte) 0x61,
-                	    					(byte) 0x74,
-                	    					(byte) 0xf2,
-                	    					(byte) 0x3b,
-                    						};
+                    byte[] bytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_GETFI_FLRD, "e:\\pec\\4", -1, -1);
                     sendMyMessage(bytes);
-//                    byte[] bytess = CHexConver.getHexBytes("FLRD");
-//                    System.out.println(bytess[0]);
-//                    sendMyMessage(new byte[]{(byte) 0xAA,(byte)0xAA,(byte)0x03});
-//                    sendMyMessage(new String("FLRD").getBytes());(byte) 
-//                    sendMyMessage(new byte[]{(byte)0x00,(byte)0x00});
                     break;
                 case BluetoothChatService.STATE_CONNECTING:
 //                    mTitle.setText(R.string.title_connecting);
@@ -152,18 +151,22 @@ public class MainActivity extends Activity {
                 }
                 break;
             case MESSAGE_WRITE:
-                System.out.println("MESSAGE_WRITE---------->");
                 byte[] writeBuf = (byte[]) msg.obj;
                 // construct a string from the buffer
                 String writeMessage = new String(writeBuf);
                 mConversationArrayAdapter.add("Me:  " + writeMessage);
                 break;
             case MESSAGE_READ:
-                System.out.println("MESSAGE_READ---------->");
                 byte[] readBuf = (byte[]) msg.obj;
+                //以16进制打印出来接收到的message
+                CHexConver.printHexString("MESSAGE_READ---->", readBuf);
+//                byte[] bytes = BuildFrameUtil.FrameAnalyse(readBuf);
+//                if(bytes != null)
+//                    CHexConver.printHexString("MESSAGE_READ---->", bytes);
                 // construct a string from the valid bytes in the buffer
                 String readMessage = new String(readBuf, 0, msg.arg1);
                 mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
+
                 break;
             case MESSAGE_DEVICE_NAME:
                 // save the connected device's name

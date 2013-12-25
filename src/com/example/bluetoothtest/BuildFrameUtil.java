@@ -84,7 +84,12 @@ public class BuildFrameUtil {
 	    break;
 	case StringConstant.TYPE_SndData_YFD:
 	    string = "YFD" + lowFrame + highFrame + "OK";
-	    break;
+	    byte[] messageByte = new byte[7];
+	    System.arraycopy("YFD".getBytes(), 0, messageByte, 0, 3);
+	    messageByte[3] = (byte) lowFrame;
+	    messageByte[4] = (byte) highFrame;
+	    System.arraycopy("OK".getBytes(), 0, messageByte, 5, 2);
+	    return messageByte;
 	case StringConstant.TYPE_SndFlEnd_FLRE:
 	    string = "FLRE";
 	    break;
@@ -158,8 +163,28 @@ public class BuildFrameUtil {
 	myFrame[2] = (byte) (index - 3 + 1);
 	byte[] resultFrame = new byte[index+1];
 	System.arraycopy(myFrame, 0, resultFrame, 0, index+1);
-	//此处应作修改
 	return resultFrame;
+    }
+    
+    /**	建立帧
+     * @param type	数据类型
+     * @param fileName	文件名
+     * @param lowFrame	帧低位
+     * @param highFrame	帧高位
+     * @return	建立好的帧
+     */
+    public static byte[] FrameBuid(int type, String fileName,
+	    int lowFrame, int highFrame) {
+	byte[] messageBytes = buildMyMessage(type, fileName, lowFrame, highFrame);//Messgae
+	byte[] CRCbytes = new byte[2];//CRC
+	if (type == StringConstant.TYPE_SndData_YFD) {
+	    CRCbytes[0] = (byte) 0xFF;
+	    CRCbytes[1] = (byte) 0xFF;
+	}
+	else
+	    CRCbytes = calculateCRC(messageBytes);
+	byte[] frameBytes = buildMyFrame(messageBytes, CRCbytes);//Frame
+	return frameBytes;
     }
     
     /**解析接收到的帧数据，取出message
