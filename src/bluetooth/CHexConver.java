@@ -1,6 +1,8 @@
 package bluetooth;
 
 import android.annotation.SuppressLint;
+
+import java.io.ByteArrayOutputStream;
 import java.util.Locale;
 
 /**
@@ -10,10 +12,10 @@ import java.util.Locale;
  * @email lijian@dzs.mobi
  * @data 2011-10-16
  * */
+
 public class CHexConver {
     private final static char[] mChars = "0123456789ABCDEF".toCharArray();
     private final static String mHexStr = "0123456789ABCDEF";
-
     /**
      * 检查16进制字符串是否有效
      * 
@@ -75,16 +77,19 @@ public class CHexConver {
 	return sb.toString();
     }
 
-    public static void printHexString(String hint, byte[] b) {
+    public static String printHexString(String hint, byte[] b) {
 	System.out.print(hint);
+	StringBuffer sb = new StringBuffer();
 	for (int i = 0; i < b.length; i++) {
 	    String hex = Integer.toHexString(b[i] & 0xFF);
 	    if (hex.length() == 1) {
 		hex = '0' + hex;
 	    }
+	    sb.append(hex.toUpperCase());
 	    System.out.print(hex.toUpperCase() + " ");
 	}
 	System.out.println("");
+	return sb.toString();
     }
 
     /**
@@ -117,5 +122,16 @@ public class CHexConver {
 	for (int i = 0; i < bs.length; i++)
 	    sb.append(toHex(bs[i]));
 	return sb.toString();
+    }
+    /*
+     * 将16进制数字解码成字符串,适用于所有字符（包括中文）
+     */
+    public static String decode(String bytes)
+    {
+    ByteArrayOutputStream baos=new ByteArrayOutputStream(bytes.length()/2);
+    //将每2位16进制整数组装成一个字节
+    for(int i=0;i<bytes.length();i+=2)
+    baos.write((mHexStr.indexOf(bytes.charAt(i))<<4 |mHexStr.indexOf(bytes.charAt(i+1))));
+    return new String(baos.toByteArray());
     }
 }

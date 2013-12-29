@@ -451,6 +451,10 @@ public class BluetoothChatService {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
+//        byte[] receivedBuffer = new byte[128];
+        private Boolean isFrameStart = false;
+        private int frameLength = -1;
+        private int receiveFrameLength = 0;
 
         public ConnectedThread(BluetoothSocket socket, String socketType) {
             Log.d(TAG, "create ConnectedThread: " + socketType);
@@ -472,20 +476,39 @@ public class BluetoothChatService {
 
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
-            byte[] buffer = new byte[128];
-            int bytes = 0;
-
+            byte[] receivedBuffer = new byte[128];
             // Keep listening to the InputStream while connected
             while (true) {
                 try {
+                    int court;
                     // Read from the InputStream
                     if( mmInStream.available() > 0){
-                    bytes = mmInStream.read(buffer , 0 ,128);
-                    // Send the obtained bytes to the UI Activity
-                    byte[] bytess = new byte[bytes];
-                    System.arraycopy(buffer, 0, bytess, 0, bytes);
-                    mHandler.obtainMessage(StringConstant.MESSAGE_READ, bytes, -1, bytess)
-                            .sendToTarget();
+                	int length = mmInStream.read(receivedBuffer , 0 ,128);
+                	mHandler.obtainMessage(StringConstant.MESSAGE_READ, length, -1, receivedBuffer)
+                	.sendToTarget();
+//                	receiveFrameLength += mmInStream.read(receivedBuffer , receiveFrameLength ,court);
+//                	byte[] realBuffer = new byte[receiveFrameLength];
+//                    //大于3就获取长度，
+//                    if ((!isFrameStart) && (receiveFrameLength >= 3)) {
+//                	if((receivedBuffer[0] == 0xAA) &&(receivedBuffer[1] == 0xAA)) {
+//                	    frameLength = receivedBuffer[2] + 3;
+//                	    isFrameStart = true;
+//                	    System.out.println("frame begin");
+//                	}else {
+//			    //重新接收
+//			}
+//		    }
+//                    if(receiveFrameLength == frameLength) {
+//                	byte[] realBuffer = new byte[receiveFrameLength];
+//                	System.arraycopy(receivedBuffer, 0, realBuffer, 0, receiveFrameLength);
+////                    // Send the obtained bytes to the UI Activity
+//                	mHandler.obtainMessage(StringConstant.MESSAGE_READ, receiveFrameLength, -1, realBuffer)
+//                	.sendToTarget();
+//                	receiveFrameLength = 0;
+//                	receivedBuffer = new byte[128];
+//                	isFrameStart = false;
+//                	System.out.println("frame ok");
+//                    }
                     }
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);

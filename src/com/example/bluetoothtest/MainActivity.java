@@ -135,7 +135,7 @@ public class MainActivity extends Activity {
 //                    mTitle.append(mConnectedDeviceName);
                     System.out.println("hanlder---------->STATE_CONNECTED");
                     mConversationArrayAdapter.clear();
-                    byte[] bytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_GETFI_FLRD, "e:\\pec\\4", -1, -1);
+                    byte[] bytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_GETFI_FLRD, "e:\\pec\\4"/*"e:\\pecfile.dat"*/, -1, -1);
                     sendMyMessage(bytes);
                     break;
                 case BluetoothChatService.STATE_CONNECTING:
@@ -159,7 +159,8 @@ public class MainActivity extends Activity {
             case MESSAGE_READ:
                 byte[] readBuf = (byte[]) msg.obj;
                 //以16进制打印出来接收到的message
-                CHexConver.printHexString("MESSAGE_READ---->", readBuf);
+                String string = CHexConver.printHexString("MESSAGE_READ---->", readBuf);
+                System.out.println(CHexConver.decode(string));
 //                byte[] bytes = BuildFrameUtil.FrameAnalyse(readBuf);
 //                if(bytes != null)
 //                    CHexConver.printHexString("MESSAGE_READ---->", bytes);

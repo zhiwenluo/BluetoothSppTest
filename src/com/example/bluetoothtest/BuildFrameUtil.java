@@ -59,6 +59,37 @@ public class BuildFrameUtil {
 	    0x8C, 0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42,
 	    0x43, 0x83, 0x41, 0x81, 0x80, 0x40 };
 
+    
+    /**	通过接收到的数据得到下一步要读的文件名
+     * @param data	接收到的数据
+     * @return	要读的文件名字符串
+     */
+    public static String getDataFileName(byte[] data) {
+	String fileName = "";
+	String fileNameTemp = "";
+	int dataLength = data.length;
+	if(dataLength == 0)
+	    return fileName;
+	int lastSpaceIndex = 0;
+	for (lastSpaceIndex = 0; lastSpaceIndex < data.length; lastSpaceIndex++) {
+	    if (data[dataLength - 1 - lastSpaceIndex] == ' ' ) 
+		break;
+	}
+	if(lastSpaceIndex == dataLength || lastSpaceIndex <= 2)
+	    return fileName;
+	int index = 0 ;
+	for (index = 0; index < lastSpaceIndex ; index++) {
+	    if (data[dataLength - lastSpaceIndex + index] != 13)
+		fileNameTemp += data[dataLength - lastSpaceIndex + index];
+	    else 
+		break;
+	}
+	if (index != lastSpaceIndex -2) 
+	    return fileName;
+	fileName = "e:\\pec\\" + fileNameTemp;
+	System.out.println("fileName---------->"+fileName);
+	return fileName;
+    }
     /**
      * 根据type类型建立要发送的数据，并转换成byte数组
      * 
@@ -83,7 +114,6 @@ public class BuildFrameUtil {
 	    string = "YFLSDOK";
 	    break;
 	case StringConstant.TYPE_SndData_YFD:
-	    string = "YFD" + lowFrame + highFrame + "OK";
 	    byte[] messageByte = new byte[7];
 	    System.arraycopy("YFD".getBytes(), 0, messageByte, 0, 3);
 	    messageByte[3] = (byte) lowFrame;
