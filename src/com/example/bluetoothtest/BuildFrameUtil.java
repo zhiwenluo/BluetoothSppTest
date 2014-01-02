@@ -66,7 +66,6 @@ public class BuildFrameUtil {
      */
     public static String getDataFileName(byte[] data) {
 	String fileName = "";
-	String fileNameTemp = "";
 	int dataLength = data.length;
 	if(dataLength == 0)
 	    return fileName;
@@ -78,16 +77,18 @@ public class BuildFrameUtil {
 	if(lastSpaceIndex == dataLength || lastSpaceIndex <= 2)
 	    return fileName;
 	int index = 0 ;
+	byte[] fileNameTemp = new byte[lastSpaceIndex-2];
 	for (index = 0; index < lastSpaceIndex ; index++) {
-	    if (data[dataLength - lastSpaceIndex + index] != 13)
-		fileNameTemp += data[dataLength - lastSpaceIndex + index];
+	    if (data[dataLength - lastSpaceIndex + index] != 13) {
+		fileNameTemp[index] = data[dataLength - lastSpaceIndex + index];
+	    }
 	    else 
 		break;
 	}
 	if (index != lastSpaceIndex -2) 
 	    return fileName;
-	fileName = "e:\\pec\\" + fileNameTemp;
-	System.out.println("fileName---------->"+fileName);
+	
+	fileName = "e:\\pec\\" + CHexConver.decode(CHexConver.printHexString("", fileNameTemp));
 	return fileName;
     }
     /**
@@ -219,7 +220,7 @@ public class BuildFrameUtil {
     
     /**解析接收到的帧数据，取出message
      * @param receivedFrame	接收到的帧数据
-     * @return	返回取出的message部分，byte数组形式
+     * @return	返回取出的message部分，byte数组形式 || null
      */
     public static byte[] FrameAnalyse(byte[] receivedFrame) {
 	byte[] receivedMessage = null;
@@ -268,64 +269,66 @@ public class BuildFrameUtil {
     
     /**根据由帧解析出来的Message进一步解析出里面的数据部分
      * @param message	解析出来的message
-     * @return	SppMessage类型，由解析Message得来
+     * @return	SppMessage类型 || null，由解析Message得来 
      */
-    public SppMessage MessageAnalyse(byte[] message) {
-	SppMessage sppMessage = new SppMessage();
+    public static SppMessage MessageAnalyse(byte[] message) {
+	SppMessage sppMessage ;
 	int sDataLen = message.length;
 	//FLSD
 	if((message[0]=='F') && (message[1] == 'L') && (message[2] == 'S') && (message[3] == 'D')) {
-	    sppMessage.type = StringConstant.TYPE_FLSD;
-	    sppMessage.lowFrame = 0;
-	    sppMessage.highFrame = 0;
+	    sppMessage = new SppMessage(StringConstant.TYPE_FLSD, 0, 0, sDataLen - 4);
 	    if(sDataLen - 4 < 0 || sDataLen > DATA_MAX_LEN) 
 		return null;
-	    sppMessage.dataLen = sDataLen - 4 ;
-	    sppMessage.data = new byte[sppMessage.dataLen];
-	    System.arraycopy(message, 4, sppMessage.data, 0, sppMessage.dataLen);
+	    byte[] data = new byte[sppMessage.getDataLen()];
+	    System.arraycopy(message, 4, data, 0, sppMessage.getDataLen());
+	    sppMessage.setData(data);
 	}
 	//FD
 	else if ((message[0] == 'F') && (message[1] == 'D')) {
-	    sppMessage.type = StringConstant.TYPE_FD;
-	    sppMessage.lowFrame = message[2];
-	    sppMessage.highFrame = message[3];
+	    sppMessage = new SppMessage(StringConstant.TYPE_FD, message[2], message[3], sDataLen - 4);
 	    if(sDataLen - 4 < 0 || sDataLen-4 > DATA_MAX_LEN-2) 
 		return null;
-	    
-	    sppMessage.dataLen = sDataLen - 4;
-	    sppMessage.data = new byte[sppMessage.dataLen];
-	    System.arraycopy(message, 4, sppMessage.data, 0, sppMessage.dataLen);
+	    byte[] data = new byte[sppMessage.getDataLen()];
+	    System.arraycopy(message, 4,  data, 0, sppMessage.getDataLen());
+	    sppMessage.setData(data);
 	}
 	//FLSE
 	else if ((message[0]=='F') && (message[1] == 'L') && (message[2] == 'S') && (message[3] == 'E')) {
-	    sppMessage.type = StringConstant.TYPE_FLSE;
-	    sppMessage.lowFrame = 0 ;
-	    sppMessage.highFrame = 0;
-	    sppMessage.dataLen = 0;
-	    sppMessage.data = new byte[sppMessage.dataLen];
+	    sppMessage = new SppMessage(StringConstant.TYPE_FLSE,0, 0, 0);
 	}
 	//YFLRDOK
-	else if ((message[0]=='Y') &&(message[0]=='F') && (message[1] == 'L') && (message[2] == 'R') && (message[3] == 'D')
-		&& (message[3] == 'O')&& (message[3] == 'K')) 
+	else if ((message[0]=='Y') &&(message[1]=='F') && (message[2] == 'L') && (message[3] == 'R') && (message[4] == 'D')
+		&& (message[5] == 'O')&& (message[6] == 'K')) 
 	{
-	    sppMessage.type = StringConstant.TYPE_GetFl_YFLRDOK;
-	    sppMessage.lowFrame = 0;
-	    sppMessage.highFrame = 0;
-	    sppMessage.dataLen  = 0;
-	    sppMessage.data = new byte[sppMessage.dataLen];
+	    sppMessage = new SppMessage(StringConstant.TYPE_GetFl_YFLRDOK,0, 0, 0);
 	}
 	//YERROR
-	else if ((message[0]=='Y') &&(message[0]=='E') && (message[1] == 'R') && (message[2] == 'R') && (message[3] == 'O')
-		&& (message[3] == 'R')) 
+	else if ((message[0]=='Y') &&(message[1]=='E') && (message[2] == 'R') && (message[3] == 'R') && (message[4] == 'O')
+		&& (message[5] == 'R')) 
 	{
-	    sppMessage.type = StringConstant.TYPE_GetFl_YERROR;
-	    sppMessage.lowFrame = 0;
-	    sppMessage.highFrame = 0;
-	    sppMessage.dataLen = 0;
-	    sppMessage.data = new byte[sppMessage.dataLen];
+	    sppMessage = new SppMessage(StringConstant.TYPE_GetFl_YERROR,0, 0, 0);
 	}
-	else
-	    return null;
+	else {
+	    System.out.println("MessageAnalyse is null");
+	    return new SppMessage(-1, 0, 0, 0);
+	}
+	return sppMessage;
+    }
+    
+    /** 封装的函数解析帧数据
+     * @param frame
+     * @return
+     */
+    public static SppMessage AnalyseMyFrame(byte[] frame) {
+	byte[] message = FrameAnalyse(frame);
+	CHexConver.printHexString("", message);
+	SppMessage sppMessage ;
+	if (message != null) {
+	    sppMessage = MessageAnalyse(message);
+	}else {
+	    sppMessage = new SppMessage(-1, 0, 0, 0);;
+	    System.out.println("message is null");
+	}
 	return sppMessage;
     }
     

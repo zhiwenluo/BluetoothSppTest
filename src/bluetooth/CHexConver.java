@@ -91,6 +91,12 @@ public class CHexConver {
 	System.out.println("");
 	return sb.toString();
     }
+    
+    public static String printHexString (String hint , byte b) {
+	byte[] bytes = new byte[1];
+	bytes[0] = b;
+	return printHexString(hint, bytes);
+    }
 
     /**
      * bytes字符串转换为Byte值
