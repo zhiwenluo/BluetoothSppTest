@@ -36,7 +36,7 @@ public class BuildFrameUtil {
 
     static char auchCRCLo[] = { 0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2,
 	    0xC6, 0x06, 0x07, 0xC7, 0x05, 0xC5, 0xC4, 0x04, 0xCC, 0x0C, 0x0D,
-	    0xCD, 0x0F, 0xCF, 0xCE, 0x0E, 0x0A,  0xCA, 0xCB, 0x0B, 0xC9, 0x09,
+	    0xCD, 0x0F, 0xCF, 0xCE, 0x0E, 0x0A, 0xCA, 0xCB, 0x0B, 0xC9, 0x09,
 	    0x08, 0xC8, 0xD8, 0x18, 0x19, 0xD9, 0x1B, 0xDB, 0xDA, 0x1A, 0x1E,
 	    0xDE, 0xDF, 0x1F, 0xDD, 0x1D, 0x1C, 0xDC, 0x14, 0xD4, 0xD5, 0x15,
 	    0xD7, 0x17, 0x16, 0xD6, 0xD2, 0x12, 0x13, 0xD3, 0x11, 0xD1, 0xD0,
@@ -59,38 +59,41 @@ public class BuildFrameUtil {
 	    0x8C, 0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42,
 	    0x43, 0x83, 0x41, 0x81, 0x80, 0x40 };
 
-    
-    /**	通过接收到的数据得到下一步要读的文件名
-     * @param data	接收到的数据
-     * @return	要读的文件名字符串
+    /**
+     * 通过接收到的数据得到下一步要读的文件名
+     * 
+     * @param data
+     *            接收到的数据
+     * @return 要读的文件名字符串
      */
-    public static String getDataFileName(byte[] data) {
+    public static String getDataFileName(byte[] data, int dataLen) {
 	String fileName = "";
-	int dataLength = data.length;
-	if(dataLength == 0)
+	if (dataLen == 0)
 	    return fileName;
 	int lastSpaceIndex = 0;
-	for (lastSpaceIndex = 0; lastSpaceIndex < data.length; lastSpaceIndex++) {
-	    if (data[dataLength - 1 - lastSpaceIndex] == ' ' ) 
+	for (lastSpaceIndex = 0; lastSpaceIndex < dataLen; lastSpaceIndex++) {
+	    if (data[dataLen - 1 - lastSpaceIndex] == ' ')
 		break;
 	}
-	if(lastSpaceIndex == dataLength || lastSpaceIndex <= 2)
+	if (lastSpaceIndex == dataLen || lastSpaceIndex <= 2)
 	    return fileName;
-	int index = 0 ;
-	byte[] fileNameTemp = new byte[lastSpaceIndex-2];
-	for (index = 0; index < lastSpaceIndex ; index++) {
-	    if (data[dataLength - lastSpaceIndex + index] != 13) {
-		fileNameTemp[index] = data[dataLength - lastSpaceIndex + index];
-	    }
-	    else 
+	int index = 0;
+	byte[] fileNameTemp = new byte[lastSpaceIndex - 2];
+	for (index = 0; index < lastSpaceIndex; index++) {
+	    if (data[dataLen - lastSpaceIndex + index] != 13) {
+		fileNameTemp[index] = data[dataLen - lastSpaceIndex + index];
+	    } else
 		break;
 	}
-	if (index != lastSpaceIndex -2) 
+	if (index != lastSpaceIndex - 2)
 	    return fileName;
-	
-	fileName = "e:\\pec\\" + CHexConver.decode(CHexConver.printHexString("", fileNameTemp));
+
+	fileName = "e:\\pec\\"
+		+ CHexConver
+			.decode(CHexConver.printHexString("", fileNameTemp));
 	return fileName;
     }
+
     /**
      * 根据type类型建立要发送的数据，并转换成byte数组
      * 
@@ -153,190 +156,285 @@ public class BuildFrameUtil {
 	crcBytes[1] = (byte) uchCRCHi;
 	return crcBytes;
     }
-    	
-    /**通过message和CRC来建立帧
-     * @param message	建立好的message
-     * @param crcbytes	计算好的CRC检验位, crcbytes[0] 为CRCL , crcbytes[1] 为CRCH
-     * @return	返回建立好的帧Frame, byte数组形式 
+
+    /**
+     * 通过message和CRC来建立帧
+     * 
+     * @param message
+     *            建立好的message
+     * @param crcbytes
+     *            计算好的CRC检验位, crcbytes[0] 为CRCL , crcbytes[1] 为CRCH
+     * @return 返回建立好的帧Frame, byte数组形式
      */
-    public static byte[] buildMyFrame(byte[] message , byte[] crcbytes) {
+    public static byte[] buildMyFrame(byte[] message, byte[] crcbytes) {
 	byte[] myFrame = new byte[DATA_MAX_LEN];
 	int index = 3;
 	if (message.length > DATA_MAX_LEN) {
 	    System.out.println("message.length > 128");
 	    return null;
 	}
-	//插入帧头
-	myFrame[0] = (byte)0xAA;
-	myFrame[1] = (byte)0xAA;
-	//插入数据位
-	for (int i = 0 ; i < message.length; i++, index++) {
+	// 插入帧头
+	myFrame[0] = (byte) 0xAA;
+	myFrame[1] = (byte) 0xAA;
+	// 插入数据位
+	for (int i = 0; i < message.length; i++, index++) {
 	    myFrame[index] = message[i];
-	    if (message[i] ==  ((byte)0xAA)) {
-		 index++;
-		myFrame[index] = (byte)0x01;
+	    if (message[i] == ((byte) 0xAA)) {
+		index++;
+		myFrame[index] = (byte) 0x01;
 	    }
 	}
-	//插入帧低位
+	// 插入帧低位
 	myFrame[index] = crcbytes[0];
 	index++;
-	if (crcbytes[0] == (byte)0xAA) {
+	if (crcbytes[0] == (byte) 0xAA) {
 	    myFrame[index] = (byte) 0x01;
 	    index++;
 	}
-	//插入帧高位
+	// 插入帧高位
 	myFrame[index] = crcbytes[1];
-	if (crcbytes[1] == (byte)0xAA) {
+	if (crcbytes[1] == (byte) 0xAA) {
 	    index++;
 	    myFrame[index] = (byte) 0x01;
 	}
-	//插入长度位
+	// 插入长度位
 	myFrame[2] = (byte) (index - 3 + 1);
-	byte[] resultFrame = new byte[index+1];
-	System.arraycopy(myFrame, 0, resultFrame, 0, index+1);
+	byte[] resultFrame = new byte[index + 1];
+	System.arraycopy(myFrame, 0, resultFrame, 0, index + 1);
 	return resultFrame;
     }
-    
-    /**	建立帧
-     * @param type	数据类型
-     * @param fileName	文件名
-     * @param lowFrame	帧低位
-     * @param highFrame	帧高位
-     * @return	建立好的帧
+
+    /**
+     * 建立帧
+     * 
+     * @param type
+     *            数据类型
+     * @param fileName
+     *            文件名
+     * @param lowFrame
+     *            帧低位
+     * @param highFrame
+     *            帧高位
+     * @return 建立好的帧
      */
-    public static byte[] FrameBuid(int type, String fileName,
-	    int lowFrame, int highFrame) {
-	byte[] messageBytes = buildMyMessage(type, fileName, lowFrame, highFrame);//Messgae
-	byte[] CRCbytes = new byte[2];//CRC
+    public static byte[] FrameBuid(int type, String fileName, int lowFrame,
+	    int highFrame) {
+	byte[] messageBytes = buildMyMessage(type, fileName, lowFrame,
+		highFrame);// Messgae
+	byte[] CRCbytes = new byte[2];// CRC
 	if (type == StringConstant.TYPE_SndData_YFD) {
 	    CRCbytes[0] = (byte) 0xFF;
 	    CRCbytes[1] = (byte) 0xFF;
-	}
-	else
+	} else
 	    CRCbytes = calculateCRC(messageBytes);
-	byte[] frameBytes = buildMyFrame(messageBytes, CRCbytes);//Frame
+	byte[] frameBytes = buildMyFrame(messageBytes, CRCbytes);// Frame
 	return frameBytes;
     }
-    
-    /**解析接收到的帧数据，取出message
-     * @param receivedFrame	接收到的帧数据
-     * @return	返回取出的message部分，byte数组形式 || null
+
+    /**
+     * 解析接收到的帧数据，取出message
+     * 
+     * @param receivedFrame
+     *            接收到的帧数据
+     * @return 返回取出的message部分，byte数组形式 || null
      */
     public static byte[] FrameAnalyse(byte[] receivedFrame) {
 	byte[] receivedMessage = null;
 	byte[] crcBytes = new byte[2];
 	int frameLength = receivedFrame.length;
 	int length = receivedFrame[2];
-	//起始符检查
-	if((receivedFrame[0] != (byte)0xAA) && (receivedFrame[1] != (byte)0xAA))
+	// 起始符检查
+	if ((receivedFrame[0] != (byte) 0xAA)
+		&& (receivedFrame[1] != (byte) 0xAA))
 	    return null;
-	//长度合法性检查
-	if( (length > DATA_MAX_LEN ) || (length > frameLength)) 
+	// 长度合法性检查
+	if ((length > DATA_MAX_LEN) || (length > frameLength))
 	    return null;
-	//CRC与长度分析
+	// CRC与长度分析
 	if (receivedFrame[frameLength - 2] == (byte) 0xAA) {
 	    crcBytes[1] = (byte) 0xAA;
-	    if (receivedFrame[frameLength-4] == (byte) 0xAA) {
+	    if (receivedFrame[frameLength - 4] == (byte) 0xAA) {
 		length -= 4;
 		crcBytes[0] = (byte) 0xAA;
-	    }else {
-		crcBytes[0] = receivedFrame[frameLength -3] ;
+	    } else {
+		crcBytes[0] = receivedFrame[frameLength - 3];
 		length -= 3;
 	    }
-	}else {
-	    crcBytes[1] = receivedFrame[frameLength -1];
-	    if (receivedFrame[frameLength - 3] == (byte)0xAA) {
+	} else {
+	    crcBytes[1] = receivedFrame[frameLength - 1];
+	    if (receivedFrame[frameLength - 3] == (byte) 0xAA) {
 		length -= 3;
 		crcBytes[0] = (byte) 0xAA;
-	    }else {
-		crcBytes[0] = receivedFrame[frameLength -2];
+	    } else {
+		crcBytes[0] = receivedFrame[frameLength - 2];
 		length -= 2;
 	    }
 	}
 	receivedMessage = new byte[length];
-	int j = 0 ;
+	int j = 0;
 	for (int i = 0; i < length; i++) {
 	    receivedMessage[i] = receivedFrame[i + 3];
 	    j++;
-	    if(receivedMessage[i] == (byte) 0xAA)
+	    if (receivedMessage[i] == (byte) 0xAA)
 		i++;
 	}
 	byte[] message = new byte[j];
-	//System.arraycopy(Object src, int srcPos, Object dest, int destPos, int length) 截取数组
-	System.arraycopy(receivedMessage, 0, message, 0, j );
+	// System.arraycopy(Object src, int srcPos, Object dest, int destPos,
+	// int length) 截取数组
+	System.arraycopy(receivedMessage, 0, message, 0, j);
 	return message;
     }
-    
-    /**根据由帧解析出来的Message进一步解析出里面的数据部分
-     * @param message	解析出来的message
-     * @return	SppMessage类型 || null，由解析Message得来 
+
+    /**
+     * 根据由帧解析出来的Message进一步解析出里面的数据部分
+     * 
+     * @param message
+     *            解析出来的message
+     * @return SppMessage类型 || null，由解析Message得来
      */
     public static SppMessage MessageAnalyse(byte[] message) {
-	SppMessage sppMessage ;
+	SppMessage sppMessage;
 	int sDataLen = message.length;
-	//FLSD
-	if((message[0]=='F') && (message[1] == 'L') && (message[2] == 'S') && (message[3] == 'D')) {
-	    sppMessage = new SppMessage(StringConstant.TYPE_FLSD, 0, 0, sDataLen - 4);
-	    if(sDataLen - 4 < 0 || sDataLen > DATA_MAX_LEN) 
+	// FLSD
+	if ((message[0] == 'F') && (message[1] == 'L') && (message[2] == 'S')
+		&& (message[3] == 'D')) {
+	    sppMessage = new SppMessage(StringConstant.TYPE_FLSD, 0, 0,
+		    sDataLen - 4);
+	    if (sDataLen - 4 < 0 || sDataLen > DATA_MAX_LEN)
 		return null;
 	    byte[] data = new byte[sppMessage.getDataLen()];
 	    System.arraycopy(message, 4, data, 0, sppMessage.getDataLen());
 	    sppMessage.setData(data);
 	}
-	//FD
+	// FD
 	else if ((message[0] == 'F') && (message[1] == 'D')) {
-	    sppMessage = new SppMessage(StringConstant.TYPE_FD, message[2], message[3], sDataLen - 4);
-	    if(sDataLen - 4 < 0 || sDataLen-4 > DATA_MAX_LEN-2) 
+	    sppMessage = new SppMessage(StringConstant.TYPE_FD, message[2],
+		    message[3], sDataLen - 4);
+	    if (sDataLen - 4 < 0 || sDataLen - 4 > DATA_MAX_LEN - 2)
 		return null;
 	    byte[] data = new byte[sppMessage.getDataLen()];
-	    System.arraycopy(message, 4,  data, 0, sppMessage.getDataLen());
+	    System.arraycopy(message, 4, data, 0, sppMessage.getDataLen());
 	    sppMessage.setData(data);
 	}
-	//FLSE
-	else if ((message[0]=='F') && (message[1] == 'L') && (message[2] == 'S') && (message[3] == 'E')) {
-	    sppMessage = new SppMessage(StringConstant.TYPE_FLSE,0, 0, 0);
+	// FLSE
+	else if ((message[0] == 'F') && (message[1] == 'L')
+		&& (message[2] == 'S') && (message[3] == 'E')) {
+	    sppMessage = new SppMessage(StringConstant.TYPE_FLSE, 0, 0, 0);
 	}
-	//YFLRDOK
-	else if ((message[0]=='Y') &&(message[1]=='F') && (message[2] == 'L') && (message[3] == 'R') && (message[4] == 'D')
-		&& (message[5] == 'O')&& (message[6] == 'K')) 
-	{
-	    sppMessage = new SppMessage(StringConstant.TYPE_GetFl_YFLRDOK,0, 0, 0);
+	// YFLRDOK
+	else if ((message[0] == 'Y') && (message[1] == 'F')
+		&& (message[2] == 'L') && (message[3] == 'R')
+		&& (message[4] == 'D') && (message[5] == 'O')
+		&& (message[6] == 'K')) {
+	    sppMessage = new SppMessage(StringConstant.TYPE_GetFl_YFLRDOK, 0,
+		    0, 0);
 	}
-	//YERROR
-	else if ((message[0]=='Y') &&(message[1]=='E') && (message[2] == 'R') && (message[3] == 'R') && (message[4] == 'O')
-		&& (message[5] == 'R')) 
-	{
-	    sppMessage = new SppMessage(StringConstant.TYPE_GetFl_YERROR,0, 0, 0);
-	}
-	else {
+	// YERROR
+	else if ((message[0] == 'Y') && (message[1] == 'E')
+		&& (message[2] == 'R') && (message[3] == 'R')
+		&& (message[4] == 'O') && (message[5] == 'R')) {
+	    sppMessage = new SppMessage(StringConstant.TYPE_GetFl_YERROR, 0, 0,
+		    0);
+	} else {
 	    System.out.println("MessageAnalyse is null");
 	    return new SppMessage(-1, 0, 0, 0);
 	}
 	return sppMessage;
     }
-    
-    /** 封装的函数解析帧数据
+
+    /**
+     * 封装的函数解析帧数据
+     * 
      * @param frame
      * @return
      */
     public static SppMessage AnalyseMyFrame(byte[] frame) {
 	byte[] message = FrameAnalyse(frame);
 	CHexConver.printHexString("", message);
-	SppMessage sppMessage ;
+	SppMessage sppMessage;
 	if (message != null) {
 	    sppMessage = MessageAnalyse(message);
-	}else {
-	    sppMessage = new SppMessage(-1, 0, 0, 0);;
+	} else {
+	    sppMessage = new SppMessage(-1, 0, 0, 0);
+	    ;
 	    System.out.println("message is null");
 	}
 	return sppMessage;
     }
-    
-    /**	格式化解析后的message数据
-     * @return	需要的数据,已PecData类型保存
+
+    /**
+     * 格式化解析后的message数据
+     * 
+     * @return 需要的数据,已PecData类型保存
      */
-    public PecData FormatPecData() {
+    public PecData FormatPecData(byte[] data, int FileBufLen) {
 	PecData pecData = new PecData();
+	DataFlag[] dataFlags = new DataFlag[DataInd.DATA_IND_MAX];
+	int i = 0;
+	int j = 1;
+	int[] Ind = new int[400];// //用来存放第n个逗号的位置。
+	Ind[0] = 0;// 第0个逗号的位置为0；
+	byte[] strDataTemp;
+	int strDataTmpLen = 50;
+
+	for (i = 0; i < FileBufLen; i++) {
+	    if (data[i] == ',') {
+		Ind[j] = i;
+		j++;
+		if (j >= Ind.length) {
+		    // 异常：FormatPecData格式化数据的时候，数据中','太多
+		    return null;
+		}
+	    }
+	}
+	// 拷贝第一个数据。
+	strDataTemp = new byte[strDataTmpLen];
+	System.arraycopy(data, 0, strDataTemp, 0, Ind[1]);
+	// 拷贝第二个数据。
+	strDataTemp = new byte[strDataTmpLen];
+	System.arraycopy(data, Ind[1] + 1, strDataTemp, 0, Ind[2] - Ind[1] - 1);
+	// 拷贝时间，以字符串的形式。
+	strDataTemp = new byte[strDataTmpLen];
+	System.arraycopy(data, Ind[15] + 1, strDataTemp, 0, Ind[16] - Ind[15]
+		- 1);
+	pecData.setTimer(strDataTemp);
+	// 拷贝第十八个数据。
+	i = 0;
+	for (j = 17; j <= 41; j++) {
+	    // 从第十七个逗号开始是要取得数据,即从UA 到err2。
+	    dataFlags[i].setFlag(false);
+	    strDataTemp = new byte[strDataTmpLen];
+	    System.arraycopy(data, Ind[j-1] + 1, strDataTemp, 0, Ind[j] - Ind[j-1]-1);
+	    if(1 == Ind[j] - Ind[j-1])
+	    {
+		i++;	
+		continue;          
+	    }
+	    boolean flag = false;
+	    for(int k =0 ; k < Ind[j] - Ind[j-1]-1; k++)
+	    {
+	    if(strDataTemp[k] == '_')
+		strDataTemp[k] = '-';
+	    if(strDataTemp[k]!=' ')
+		flag=true;
+	    }
+	    if(flag)
+		dataFlags[i].setFlag(true);
+	    else
+	    {
+		i++;	
+		continue;          
+	    }
+	    if(i == DataInd.FRE_IND){
+	  	 ;
+	    }
+	    else {
+		dataFlags[i].setData(CHexConver.getDouble(strDataTemp , 0));
+//		dataFlags[i].setData(ato);
+	    }
+	    i++;
+	}
+	pecData.setDataFlags(dataFlags);
 	return pecData;
     }
 }

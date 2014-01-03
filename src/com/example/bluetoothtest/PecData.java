@@ -11,11 +11,18 @@ public class PecData {
     }
     
     public void setDataFlags(DataFlag[] newDataFlag) {
-	this.dataFlag = newDataFlag;
+	if (newDataFlag.length > DataInd.DATA_IND_MAX)
+	    return;
+	for (int i = 0; i < newDataFlag.length; i++) {
+	    this.dataFlag[i].setDataFlag(newDataFlag[i]);
+	}
     }
     
     public void setTimer(byte[] newTimer) {
-	this.stTimer = newTimer;
+	if (newTimer.length > 50) {
+	    return;
+	}
+	System.arraycopy(newTimer, 0, this.stTimer, 0, newTimer.length);
     }
     
     public DataFlag[] getDataFlags() {

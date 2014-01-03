@@ -19,4 +19,9 @@ public class DataFlag {
 	public boolean getFlag() {
 	    return this.Flag;
 	}
+	
+	public void setDataFlag(DataFlag dataFlag) {
+	    this.Data = dataFlag.getData();
+	    this.Flag = dataFlag.getFlag();
+	}
 }

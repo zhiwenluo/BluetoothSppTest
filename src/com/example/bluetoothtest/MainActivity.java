@@ -36,9 +36,14 @@ import bluetooth.CHexConver;
 import bluetooth.DiscoveryDevicesActivity;
 
 public class MainActivity extends Activity {
-
+    private static final int FRAME_MAX_NUM = 30;
+    private static final int DATA_MAX_LEN = 252;
+    private static final int FRAME_MAX_LEN = 255;
+    private static final int FILE_BUF_LEN = (FRAME_MAX_NUM*DATA_MAX_LEN);
+    private byte[][] glbFileDataBuf = new byte[FRAME_MAX_NUM][DATA_MAX_LEN];
+    private int[] glbFileDataLen = new int[FRAME_MAX_NUM];
     private boolean D = true;
-    private int FDCourt = 0;
+    private boolean hasGetFileName = false;
     int lowFrame = 0x00 ;
     private String TAG = "this";
     private ListView listView;
@@ -204,32 +209,54 @@ public class MainActivity extends Activity {
 	    break;
 	case StringConstant.TYPE_FD:
 	    //发送应答帧命令
-	    //第一次进入时，保存文件名再应答，然后发送读文件名
-	    if(FDCourt == 0) {
-		writeBytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_SndData_YFD, "", 0x00,0x00);
-		sendMyMessage(writeBytes);
-	    }else if(FDCourt == 1){
-		sppMessage.print();
-		String fileName = BuildFrameUtil.getDataFileName(sppMessage.getData());
-		writeBytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_SndData_YFD, "", 0x01,0x00);
-		sendMyMessage(writeBytes);
-		writeBytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_GETFI_FLRD, fileName/*"e:\\pecfile.dat"*/, -1, -1);
-		sendMyMessage(writeBytes);
-		System.out.println("halderSppMessage 读文件 "+fileName);
-	    }else {
-	    //第二次进入时，递增应答，保存数据
-		if (lowFrame <= 0x11) {
-		    writeBytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_SndData_YFD, "", lowFrame,0x00);
-		    sendMyMessage(writeBytes);
-		    lowFrame++;
-		}
+	    int NumFrameNow = (sppMessage.getHighFrame())<<8;
+	    NumFrameNow = NumFrameNow + sppMessage.getLowFrame();;
+	    if (NumFrameNow >= FRAME_MAX_NUM) {
+		//发出消息停止获取
+		break;
 	    }
-	    FDCourt ++;
+	    if (sppMessage.getDataLen() <= DATA_MAX_LEN) {
+		//存数据
+		System.arraycopy(sppMessage.getData(), 0, glbFileDataBuf[NumFrameNow], 0, sppMessage.getDataLen());
+		glbFileDataLen[NumFrameNow] = sppMessage.getDataLen();
+		writeBytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_SndData_YFD, "", sppMessage.getLowFrame(),sppMessage.getHighFrame());
+		sendMyMessage(writeBytes);
+	    }else {
+		//停止获取
+	    }
 	    break;
 	case StringConstant.TYPE_FLSE:
 	    //发送应答文件结束命令
-//            writeBytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_SndFlEnd_FLRE, "", -1, -1);
-//            sendMyMessage(writeBytes);
+            writeBytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_SndFlEnd_FLRE, "", -1, -1);
+            sendMyMessage(writeBytes);
+	    int FileBufferWriteInd = 0;
+	    byte[] FileBufferTmp = new byte[FILE_BUF_LEN+1];
+	    for (int i = 0; i < FRAME_MAX_NUM; i++) {
+		if (FileBufferWriteInd + glbFileDataLen[i] > FILE_BUF_LEN) {
+		    //异常：FLSEWaitData收到的数据长度大于数据接收缓冲";
+		}
+		System.arraycopy(glbFileDataBuf[i], 0 , FileBufferTmp , FileBufferWriteInd, glbFileDataLen[i]);
+		FileBufferWriteInd += glbFileDataLen[i];	
+	    }
+	    if (FileBufferWriteInd == 0) {
+		//异常：取回的文件的长度为0
+		break;
+	    }
+	    if (hasGetFileName) {
+		String fileName = BuildFrameUtil.getDataFileName(FileBufferTmp,FileBufferWriteInd);
+		if (fileName.equals("")) {
+		    //异常：FLSEWaitData收到的配置文件中没有可以读取的数据文件名称"
+		}else {
+		writeBytes = BuildFrameUtil.FrameBuid(StringConstant.TYPE_GETFI_FLRD, fileName/*"e:\\pecfile.dat"*/, -1, -1);
+		sendMyMessage(writeBytes);
+		System.out.println("halderSppMessage 读文件 "+fileName);
+		hasGetFileName = true;
+		glbFileDataBuf = new byte[FRAME_MAX_NUM][DATA_MAX_LEN];
+		glbFileDataLen = new int[FRAME_MAX_NUM];
+		}
+	    }else {
+		//格式化到的数据
+	    }
 	    break;
 	default:
 	    break;

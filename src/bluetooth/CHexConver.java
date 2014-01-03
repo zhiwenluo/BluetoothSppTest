@@ -140,4 +140,30 @@ public class CHexConver {
     baos.write((mHexStr.indexOf(bytes.charAt(i))<<4 |mHexStr.indexOf(bytes.charAt(i+1))));
     return new String(baos.toByteArray());
     }
+    /** 
+     * 通过byte数组取得float 
+     * 
+     * @param bb 
+     * @param index 
+     * @return 
+     */  
+    public static double getDouble(byte[] b, int index) {  
+        long l;  
+        l = b[0];  
+        l &= 0xff;  
+        l |= ((long) b[1] << 8);  
+        l &= 0xffff;  
+        l |= ((long) b[2] << 16);  
+        l &= 0xffffff;  
+        l |= ((long) b[3] << 24);  
+        l &= 0xffffffffl;  
+        l |= ((long) b[4] << 32);  
+        l &= 0xffffffffffl;  
+        l |= ((long) b[5] << 40);  
+        l &= 0xffffffffffffl;  
+        l |= ((long) b[6] << 48);  
+        l &= 0xffffffffffffffl;  
+        l |= ((long) b[7] << 56);  
+        return Double.longBitsToDouble(l);  
+    }  
 }
