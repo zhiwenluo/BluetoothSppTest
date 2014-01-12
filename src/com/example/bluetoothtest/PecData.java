@@ -1,5 +1,8 @@
 package com.example.bluetoothtest;
 
+import bluetooth.CHexConver;
+import android.util.Printer;
+
 public class PecData {
 
     private DataFlag[] dataFlag;
@@ -8,6 +11,9 @@ public class PecData {
     public PecData() {
 	this.dataFlag = new DataFlag[DataInd.DATA_IND_MAX];
 	this.stTimer = new byte[50];
+	for (int i = 0; i < DataInd.DATA_IND_MAX; i++) {
+	    this.dataFlag[i] = new DataFlag();
+	}
     }
     
     public void setDataFlags(DataFlag[] newDataFlag) {
@@ -31,6 +37,16 @@ public class PecData {
     
     public byte[] getTimer() {
 	return this.stTimer;
+    }
+    
+    public void printer() {
+	System.out.println("stTimer:"+CHexConver.decode(CHexConver.printHexString("stTimer : ", this.stTimer)));
+	for (int i = 0; i < DataInd.DATA_IND_MAX; i++) {
+	    if(this.dataFlag[i].getFlag())
+		System.out.println(i+":" +this.dataFlag[i].getData());
+	    else
+		System.out.println(i+": null");
+	}
     }
     /*
     float Ua;

@@ -367,7 +367,7 @@ public class BuildFrameUtil {
      * 
      * @return 需要的数据,已PecData类型保存
      */
-    public PecData FormatPecData(byte[] data, int FileBufLen) {
+    public static PecData FormatPecData(byte[] data, int FileBufLen) {
 	PecData pecData = new PecData();
 	DataFlag[] dataFlags = new DataFlag[DataInd.DATA_IND_MAX];
 	int i = 0;
@@ -402,6 +402,7 @@ public class BuildFrameUtil {
 	i = 0;
 	for (j = 17; j <= 41; j++) {
 	    // 从第十七个逗号开始是要取得数据,即从UA 到err2。
+	    dataFlags[i] = new DataFlag();
 	    dataFlags[i].setFlag(false);
 	    strDataTemp = new byte[strDataTmpLen];
 	    System.arraycopy(data, Ind[j-1] + 1, strDataTemp, 0, Ind[j] - Ind[j-1]-1);
@@ -429,8 +430,18 @@ public class BuildFrameUtil {
 	  	 ;
 	    }
 	    else {
-		dataFlags[i].setData(CHexConver.getDouble(strDataTemp , 0));
-//		dataFlags[i].setData(ato);
+		//浮点数，取小数点（2E）后四位
+		int p;
+		for (p = 0; p < strDataTemp.length; p++) {
+		    if(strDataTemp[p] == 0x2E)
+			break;
+		}
+		byte[] dataTemp = new byte[p+4+1];
+		System.arraycopy(strDataTemp, 0, dataTemp, 0, p+4+1);
+		String doubleString = CHexConver.decode(CHexConver.printHexString("strDataTemp---"+j+"-->", dataTemp));
+		double x = Double.parseDouble(doubleString);
+		dataFlags[i].setData(x);
+//		dataFlags[i].setData(atof);
 	    }
 	    i++;
 	}

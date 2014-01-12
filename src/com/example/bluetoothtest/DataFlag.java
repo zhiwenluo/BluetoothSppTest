@@ -3,7 +3,6 @@ package com.example.bluetoothtest;
 public class DataFlag {
 	private double Data;
 	private boolean Flag;
-	
 	public void setData(double data) {
 	    this.Data = data;
 	}
